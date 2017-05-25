@@ -17,8 +17,8 @@ public class CameraViewController:Singleton<CameraViewController>
     public float ScrollSensitive = 100.0f;
     public float TranslateSensitive = 10.0f;
 
-    [HideInInspector]
-    public Vector3 RotationOriginPosition;
+    private Vector3 RotationOriginPosition;
+    private Transform TargetObj;
 
     private ComRef<Transform> mainCamera;
     private Vector3 LastMousePosition;
@@ -32,9 +32,12 @@ public class CameraViewController:Singleton<CameraViewController>
              return Camera.main.transform;
          });
 
-        RotationOriginPosition = mainCamera.Ref.position;
+        //RotationOriginPosition = mainCamera.Ref.position;
+        TargetObj = GameObject.Find("Building").transform;
+        RotationOriginPosition = TargetObj.position;
         LastMousePosition = Input.mousePosition;
         DefaultRotation = Camera.main.transform.rotation;
+
     }
 	
 	private void Update()
@@ -56,9 +59,10 @@ public class CameraViewController:Singleton<CameraViewController>
         float scrolldelta = Input.mouseScrollDelta.y;
         if (scrolldelta != 0)
         {
-            mainCamera.Ref.Translate(mainCamera.Ref.forward*scrolldelta*Time.deltaTime*ScrollSensitive);
+            //Zoom in/out should make by camera's fov not the distance
+            Camera.main.fieldOfView += -scrolldelta * Time.deltaTime * ScrollSensitive;
+            //mainCamera.Ref.localPosition += mainCamera.Ref.forward * scrolldelta * Time.deltaTime * ScrollSensitive;
         }
-
     }
 
     private void DetectMouseAxis(CameraAction action)
@@ -67,8 +71,40 @@ public class CameraViewController:Singleton<CameraViewController>
         LastMousePosition = Input.mousePosition;
         if (action == CameraAction.rotate)
         {
-            mainCamera.Ref.RotateAround(RotationOriginPosition, new Vector3(0, 1, 0), MouseDelta.x * RotateSensitive * Time.deltaTime);
-            mainCamera.Ref.RotateAround(RotationOriginPosition, new Vector3(1, 0, 0), -MouseDelta.y * RotateSensitive * Time.deltaTime);
+            if (Mathf.Abs(MouseDelta.x) > (Mathf.Abs(MouseDelta.y)))
+            {
+                //Rotate by the y axis should always be the target's up
+                //here be the forward because of the wrong axis of the obj
+                if (TargetObj.name == "Building")
+                {
+                    mainCamera.Ref.RotateAround(RotationOriginPosition, TargetObj.up, MouseDelta.x * RotateSensitive * Time.deltaTime);
+                }
+                else
+                {
+                    mainCamera.Ref.RotateAround(RotationOriginPosition, TargetObj.forward, MouseDelta.x * RotateSensitive * Time.deltaTime);
+                }
+            }
+            else
+            {
+                
+                //rotate by the y axis should be the camera's forward cross the target's up
+                //here be the forward because of the wrong axis of the obj
+                if (TargetObj.name == "Building")
+                {
+                    float angle = Vector3.Angle(mainCamera.Ref.forward, TargetObj.up);
+                    //when the forward is close to the tartget axis ,return to avoid reversal
+                    if ((Mathf.Abs(angle) <=5f && MouseDelta.y<=0) || (Mathf.Abs(angle) >= 175f&&MouseDelta.y>=0)) 
+                        return;
+                    mainCamera.Ref.RotateAround(RotationOriginPosition, Vector3.Cross(mainCamera.Ref.forward, TargetObj.up), -MouseDelta.y * RotateSensitive * Time.deltaTime);
+                }
+                else
+                {
+                    float angle = Vector3.Angle(mainCamera.Ref.forward, TargetObj.forward);
+                    if ((Mathf.Abs(angle) < 0.1f && MouseDelta.y <= 0) || (Mathf.Abs(angle) > 179.9f && MouseDelta.y >= 0))
+                        return;
+                    mainCamera.Ref.RotateAround(RotationOriginPosition, Vector3.Cross(mainCamera.Ref.forward, TargetObj.forward), -MouseDelta.y * RotateSensitive * Time.deltaTime);
+                }
+            }
         }
         else if(action==CameraAction.translate)
         {
@@ -76,10 +112,10 @@ public class CameraViewController:Singleton<CameraViewController>
         }
     }
 
-    public void SetCameraPosition(Vector3 TargetObjPosition)
+    public void SetCameraPosition(Transform _TargetObj)
     {
-        mainCamera.Ref.position = TargetObjPosition + MoveDistance;
-        RotationOriginPosition = TargetObjPosition;
-        mainCamera.Ref.rotation = Quaternion.LookRotation(-MoveDistance) * DefaultRotation;
+        TargetObj = _TargetObj;
+        mainCamera.Ref.position = _TargetObj.position+ MoveDistance;
+        RotationOriginPosition = _TargetObj.position;
     }
 }

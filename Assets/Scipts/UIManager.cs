@@ -25,7 +25,7 @@ public class UIManager : Singleton<UIManager>
 
     public void OnClickPlaceRoot(string PlaceName)
     {
-        Vector3 _placePosition = building.transform.Find(PlaceName).position;
+        Transform _placePosition = building.transform.Find(PlaceName);
         CameraViewController.Instance.SetCameraPosition(_placePosition);
     }
 }
