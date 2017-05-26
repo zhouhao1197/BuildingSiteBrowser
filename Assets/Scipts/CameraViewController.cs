@@ -101,7 +101,7 @@ public class CameraViewController:Singleton<CameraViewController>
                 else
                 {
                     float angle = Vector3.Angle(mainCamera.Ref.forward, TargetObj.forward);
-                    if ((Mathf.Abs(angle) < 0.1f && MouseDelta.y <= 0) || (Mathf.Abs(angle) > 179.9f && MouseDelta.y >= 0))
+                    if ((Mathf.Abs(angle) < 5f && MouseDelta.y <= 0) || (Mathf.Abs(angle) > 175f && MouseDelta.y >= 0))
                         return;
                     mainCamera.Ref.RotateAround(RotationOriginPosition, Vector3.Cross(mainCamera.Ref.forward, TargetObj.forward), -MouseDelta.y * RotateSensitive * Time.deltaTime);
                 }
