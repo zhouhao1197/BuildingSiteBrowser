@@ -10,8 +10,8 @@ public class CameraViewController:Singleton<CameraViewController>
         translate
     }
 
-    [Tooltip("The Vector which is the delta position of camera and target obj")]
-    public Vector3 MoveDistance = new Vector3(0, 10, -20);
+    //[Tooltip("The Vector which is the delta position of camera and target obj")]
+    //public Vector3 MoveDistance = new Vector3(0, 100f, -200f);
 
     public float RotateSensitive = 300.0f;
     public float ScrollSensitive = 100.0f;
@@ -61,7 +61,6 @@ public class CameraViewController:Singleton<CameraViewController>
         {
             //Zoom in/out should make by camera's fov not the distance
             Camera.main.fieldOfView += -scrolldelta * Time.deltaTime * ScrollSensitive;
-            //mainCamera.Ref.localPosition += mainCamera.Ref.forward * scrolldelta * Time.deltaTime * ScrollSensitive;
         }
     }
 
@@ -115,7 +114,16 @@ public class CameraViewController:Singleton<CameraViewController>
     public void SetCameraPosition(Transform _TargetObj)
     {
         TargetObj = _TargetObj;
-        mainCamera.Ref.position = _TargetObj.position+ MoveDistance;
-        RotationOriginPosition = _TargetObj.position;
+		Vector3 _position;
+		if (_TargetObj.GetComponent<MeshCollider> () != null) {
+			_position = _TargetObj.GetComponent<MeshCollider> ().bounds.center;
+		}
+		else
+		{
+			_position = _TargetObj.position;
+		}
+		mainCamera.Ref.position = _position+ TargetObj.up*50f;
+		mainCamera.Ref.position += TargetObj.forward * 10f;
+        RotationOriginPosition = _position;
     }
 }
