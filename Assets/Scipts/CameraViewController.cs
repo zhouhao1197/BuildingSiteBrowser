@@ -60,7 +60,9 @@ public class CameraViewController:Singleton<CameraViewController>
         if (scrolldelta != 0)
         {
             //Zoom in/out should make by camera's fov not the distance
-            Camera.main.fieldOfView += -scrolldelta * Time.deltaTime * ScrollSensitive;
+			// the change of fov may cause distortion
+            //Camera.main.fieldOfView += -scrolldelta * Time.deltaTime * ScrollSensitive;
+			mainCamera.Ref.localPosition += mainCamera.Ref.forward * scrolldelta * Time.deltaTime * ScrollSensitive;
         }
     }
 
